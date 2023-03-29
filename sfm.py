@@ -125,4 +125,58 @@ class StructureFromMotion:
         Outputs: final_camera_poses (final list of camera poses),
                  final_structure (final 3D point cloud)
         """
-        pass
+        # Step 1: Detect and describe keypoints
+        keypoints_list, descriptors_list = self.detect_and_describe_keypoints()
+
+        # Step 2: Match keypoints across pairs of images
+        matches_list = self.match_keypoints(descriptors_list)
+
+        # Step 3: Robustly estimate matches
+        filtered_matches_list = self.robustly_estimate_matches(matches_list)
+
+        # Step 4: Initialize the 3D structure and camera poses
+        initial_structure, initial_camera_poses = self.initialize_structure(keypoints_list, filtered_matches_list)
+
+        # Initialize the final structure and camera poses with the initial values
+        final_structure = initial_structure
+        final_camera_poses = initial_camera_poses
+
+        # Iterate through the remaining images
+        for i in range(len(self.images)):
+            if i not in initial_camera_poses:
+                # Step 5a: Estimate the camera pose for the new image
+                camera_pose = self.estimate_camera_pose(keypoints_list[i], filtered_matches_list[i], final_structure)
+
+                # Step 5b: Triangulate new points
+                new_points = self.triangulate_new_points(
+                    keypoints_list[i], keypoints_list[final_camera_poses.keys()[0]],
+                    camera_pose, final_camera_poses[final_camera_poses.keys()[0]], filtered_matches_list[i]
+                )
+
+                # Step 5c: Update existing points
+                updated_structure = self.update_existing_points(
+                    keypoints_list[i], keypoints_list[final_camera_poses.keys()[0]],
+                    filtered_matches_list[i], final_structure
+                )
+
+                # Step 5d: Bundle adjustment
+                refined_camera_poses, refined_structure = self.bundle_adjustment(
+                    final_camera_poses, updated_structure, keypoints_list, filtered_matches_list
+                )
+
+                # Update the final structure and camera poses with the refined values
+                final_structure = refined_structure
+                final_camera_poses = refined_camera_poses
+
+        # Step 6: Detect loop closures and apply global optimization (optional)
+        loop_closures = self.detect_loop_closure(keypoints_list, descriptors_list, final_camera_poses)
+        optimized_camera_poses, optimized_structure = self.global_optimization(
+            final_camera_poses, final_structure, loop_closures
+        )
+
+        # Update the final structure and camera poses with the optimized values
+        final_structure = optimized_structure
+        final_camera_poses = optimized_camera_poses
+
+        return final_camera_poses, final_structure
+
