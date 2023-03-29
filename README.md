@@ -36,3 +36,20 @@ images = [...] # Load your images here as a list of NumPy arrays
 sfm = StructureFromMotion(images, feature_detector='SIFT')
 sfm.run()
 ```
+
+SfM Pipeline Overview
+The SfM pipeline consists of the following steps:
+
+Detect and describe keypoints in each image.
+Match keypoints across pairs of images.
+Robustly estimate matches using RANSAC or another robust estimation technique.
+Initialize the 3D structure and camera poses with a suitable pair of images.
+Incrementally add images to the reconstruction by:
+Estimating camera pose for each new image.
+Triangulating new 3D points from matched keypoints.
+Updating existing 3D points with new observations.
+Applying bundle adjustment to refine the updated reconstruction.
+Optionally, detect loop closures and apply global optimization to improve the overall consistency of the reconstruction.
+Customization
+You can customize the SfM pipeline by modifying the methods in the StructureFromMotion class. This can include changing the feature detector, matching algorithm, or robust estimation technique, as well as adding new functionality or optimization steps.
+
