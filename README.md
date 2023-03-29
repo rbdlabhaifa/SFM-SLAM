@@ -23,7 +23,7 @@ This project implements a Structure from Motion (SfM) pipeline to reconstruct a 
 
 ```bash
 pip install opencv-python opencv-contrib-python numpy
-
+```
 Usage
 Import the StructureFromMotion class from the sfm.py file.
 Create an instance of the class with the input images and the desired feature detector.
