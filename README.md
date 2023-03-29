@@ -29,3 +29,10 @@ Import the StructureFromMotion class from the sfm.py file.
 Create an instance of the class with the input images and the desired feature detector.
 Call the run method to execute the SfM pipeline.
 Example:
+```
+from sfm import StructureFromMotion
+
+images = [...] # Load your images here as a list of NumPy arrays
+sfm = StructureFromMotion(images, feature_detector='SIFT')
+sfm.run()
+```
