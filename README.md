@@ -4,15 +4,15 @@ General outline of a Structure from Motion (SfM) pipeline:
 
 Input: A set of overlapping images of a scene captured from different viewpoints.
 
-Feature extraction and description:
+*Feature extraction and description:*
 a. Detect keypoints in each image using a feature detection algorithm (e.g., SIFT, SURF, or ORB).
 b. Compute descriptors for each keypoint to facilitate matching (using the same algorithm as in step 2a).
 
-Feature matching:
+*Feature matching:*
 a. Match keypoints across pairs of images using descriptor similarity (e.g., nearest-neighbor matching or FLANN).
 b. Apply a robust estimation technique (e.g., RANSAC) to remove outlier matches.
 
-Incremental SfM:
+*Incremental SfM:* \\
 a. Select an initial pair of images with a high number of matches and a suitable baseline.
 b. Estimate the relative camera poses and 3D positions of the matched keypoints using a technique like the five-point algorithm or the eight-point algorithm.
 c. Perform bundle adjustment to minimize the reprojection error and refine the initial reconstruction.
