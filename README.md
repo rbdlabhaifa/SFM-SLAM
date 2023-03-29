@@ -40,16 +40,16 @@ sfm.run()
 ## SfM Pipeline Overview
 
 The SfM pipeline consists of the following steps:
-Detect and describe keypoints in each image.
-Match keypoints across pairs of images.
-Robustly estimate matches using RANSAC or another robust estimation technique.
-Initialize the 3D structure and camera poses with a suitable pair of images.
-Incrementally add images to the reconstruction by:
-Estimating camera pose for each new image.
-Triangulating new 3D points from matched keypoints.
-Updating existing 3D points with new observations.
-Applying bundle adjustment to refine the updated reconstruction.
-Optionally, detect loop closures and apply global optimization to improve the overall consistency of the reconstruction.
+1. Detect and describe keypoints in each image.
+2. Match keypoints across pairs of images.
+3. Robustly estimate matches using RANSAC or another robust estimation technique.
+4. Initialize the 3D structure and camera poses with a suitable pair of images.
+5. Incrementally add images to the reconstruction by:
+* Estimating camera pose for each new image.
+* Triangulating new 3D points from matched keypoints.
+* Updating existing 3D points with new observations.
+* Applying bundle adjustment to refine the updated reconstruction.
+6. Optionally, detect loop closures and apply global optimization to improve the overall consistency of the reconstruction.
 
 ## Customization
 
