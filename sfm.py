@@ -1,5 +1,6 @@
-import numpy as np
 import cv2
+import numpy as np
+
 
 class StructureFromMotion:
     def __init__(self, images, feature_detector='SIFT'):
@@ -32,6 +33,123 @@ class StructureFromMotion:
         Outputs: filtered_matches_list (list of filtered matches for each pair of images)
         """
         pass
+
+    def best_R_T(self, points1, points2, R, T, K):
+        # Choose R, T with lowest reprojection error
+        min_error = float('inf')
+        best_R = None
+        best_T = None
+
+        for i in range(len(R)):
+            P1 = K @ np.eye(3, 4)
+            P2 = K @ np.hstack((R[i], T[i][:, np.newaxis]))
+
+            # Compute reprojection error
+            error = 0
+            for j in range(len(points1)):
+                x1_hom = np.hstack((points1[j], [1]))
+                x2_hom = np.hstack((points2[j], [1]))
+                x1_reproj = P1 @ x1_hom
+                x2_reproj = P2 @ x2_hom
+                x1_reproj /= x1_reproj[-1]
+                x2_reproj /= x2_reproj[-1]
+                error += np.sum((x1_hom[:2] - x1_reproj[:2]) ** 2)
+                error += np.sum((x2_hom[:2] - x2_reproj[:2]) ** 2)
+            error /= (2 * len(points1))
+
+            if error < min_error:
+                min_error = error
+                best_R = R[i]
+                best_T = T[i]
+
+        return best_R, best_T
+
+    def use8point_opencv(self, points1, points2, K=None):
+        """
+        Initialize camera poses with a suitable pair of images.
+        Input: points1 (set of points from first image)
+               points2 (set of matching points from second image)
+               K (Intrinsic camera matrix)
+        Outputs: Rotation and Translation from first camera to second camera
+        """
+
+        # Define intrinsic camera matrix (assuming unit focal length)
+        if K is None:
+            K = np.eye(3)
+
+        # Compute the essential matrix from the camera matrix and point correspondences
+        E, _ = cv2.findEssentialMat(points1, points2, K, method=cv2.FM_8POINT, threshold=0.1)
+
+        _, R, t, _ = cv2.recoverPose(E, points1, points2, K)
+
+        return R, t
+
+    def use8point(self, points1, points2, K=None):
+        """
+        Initialize camera poses with a suitable pair of images.
+        Input: points1 (set of points from first image)
+               points2 (set of matching points from second image)
+               K (Intrinsic camera matrix)
+        Outputs: Rotation and Translation from first camera to second camera
+        """
+
+        # Define intrinsic camera matrix (assuming unit focal length)
+        if K is None:
+            K = np.eye(3)
+
+        x1 = points1[:, 0]
+        y1 = points1[:, 1]
+        x1dash = points2[:, 0]
+        y1dash = points2[:, 1]
+        A = np.zeros((len(x1), 9))
+        for i in range(len(x1)):
+            A[i] = np.array(
+                [x1dash[i] * x1[i], x1dash[i] * y1[i], x1dash[i], y1dash[i] * x1[i], y1dash[i] * y1[i], y1dash[i],
+                 x1[i], y1[i], 1])
+
+        # taking SVD of A for estimation of F
+        U, S, V = np.linalg.svd(A, full_matrices=True)
+        F_est = V[-1, :]
+        F_est = F_est.reshape(3, 3)
+
+        # Enforcing rank 2 for F
+        ua, sa, va = np.linalg.svd(F_est, full_matrices=True)
+        sa = np.diag(sa)
+        sa[2, 2] = 0
+        F = np.dot(ua, np.dot(sa, va))
+        E_est = np.dot(K.T, np.dot(F, K))
+
+        # reconstructing E by correcting singular values
+        U, S, V = np.linalg.svd(E_est, full_matrices=True)
+        S = np.diag(S)
+        S[0, 0], S[1, 1], S[2, 2] = 1, 1, 0
+        E = np.dot(U, np.dot(S, V))
+
+        U, S, V = np.linalg.svd(E)
+        W = np.array([[0, -1, 0], [1, 0, 0], [0, 0, 1]])
+
+        # Generate candidate R, T
+        R1 = np.dot(U, np.dot(W, V))
+        R2 = np.dot(U, np.dot(W, V))
+        R3 = np.dot(U, np.dot(W.T, V))
+        R4 = np.dot(U, np.dot(W.T, V))
+
+        T1 = U[:, 2]
+        T2 = -U[:, 2]
+        T3 = U[:, 2]
+        T4 = -U[:, 2]
+
+        R = [R1, R2, R3, R4]
+        T = [T1, T2, T3, T4]
+
+        for i in range(len(R)):
+            if (np.linalg.det(R[i]) < 0):
+                R[i] = -R[i]
+                T[i] = -T[i]
+
+        R, T = self.best_R_T(R, T, K)
+
+        return R, T
 
     def initialize_structure(self, keypoints_list, filtered_matches_list):
         """
@@ -179,4 +297,3 @@ class StructureFromMotion:
         final_camera_poses = optimized_camera_poses
 
         return final_camera_poses, final_structure
-
