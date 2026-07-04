@@ -1,3 +1,9 @@
+"""
+Structure from Motion pipeline scaffold (RBD Lab / University of Haifa).
+
+All stage methods except run() orchestration are stubs — implement them
+incrementally. See demos/demo_keypoints.py for a working feature-matching stage.
+"""
 import numpy as np
 import cv2
 

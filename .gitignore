@@ -1,0 +1,10 @@
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+config.yaml
+output/
+*.ply
+.DS_Store
+.idea/
