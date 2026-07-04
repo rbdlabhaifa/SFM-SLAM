@@ -15,7 +15,7 @@ python demos/demo_keypoints.py
 
 **Output:** `output/matches_000_001.jpg`, … — side-by-side match visualizations.
 
-**Tip:** Use sequential phone photos of the same scene with 60–80% overlap, similar to COLMAP / NeRF capture advice.
+**Tip:** Use sequential phone photos of the same scene with 60–80% overlap between consecutive frames.
 
 ## Demo 2 — Pipeline skeleton (development)
 

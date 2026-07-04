@@ -1,150 +1,125 @@
-<div align="center">
-
 # SFM-SLAM
 
-### Structure from Motion for Sparse 3D Reconstruction & Camera Pose Estimation
+> **Repository:** [rbdlabhaifa/SFM-SLAM](https://github.com/rbdlabhaifa/SFM-SLAM)
 
-<br>
+## What is this project?
 
-**[RBD Lab](https://github.com/rbdlabhaifa) · University of Haifa**
+**SFM-SLAM** is a Python **Structure from Motion (SfM) scaffold** from the [RBD Lab, University of Haifa](https://github.com/rbdlabhaifa). It defines a classical incremental SfM pipeline — feature detection, matching, pose estimation, triangulation, and bundle adjustment — as an extensible `StructureFromMotion` class in [`sfm.py`](sfm.py).
 
-<br>
+The repo is meant for **coursework and prototyping**: students implement each stage themselves rather than calling a black-box tool like COLMAP.
 
-[![Python](https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.x-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![License](https://img.shields.io/badge/License-Academic-555?style=for-the-badge)](https://github.com/rbdlabhaifa/SFM-SLAM)
+## What does it do?
 
-<br>
+**Planned output (when fully implemented):** a sparse **3D point cloud** and **camera poses** from a set of overlapping images.
 
-[**Quick Start**](#quick-start) ·
-[**Pipeline**](#pipeline) ·
-[**Demos**](#demos) ·
-[**Handover Docs**](#handover-documentation) ·
-[**Repository**](https://github.com/rbdlabhaifa/SFM-SLAM)
+**What works today:**
 
-</div>
+1. **Pipeline skeleton** — `StructureFromMotion.run()` orchestrates all SfM stages in order.
+2. **Keypoint demo** — [`demos/demo_keypoints.py`](demos/demo_keypoints.py) runs real OpenCV feature detection, matching, and RANSAC filtering on image pairs.
+3. **Configurable inputs** — [`config.yaml.example`](config.yaml.example) for image paths, detector choice, and matcher settings.
 
----
-
-<br>
-
-## Abstract
-
-> We provide a **Structure from Motion (SfM)** scaffold for reconstructing a sparse **3D point cloud** and estimating **camera poses** from a set of overlapping images. The pipeline follows the classical incremental SfM recipe — feature detection, robust matching, two-view initialization, incremental registration, triangulation, **bundle adjustment**, and optional **loop closure** — implemented as an extensible Python class intended for robotics and SLAM coursework at the RBD Lab.
-
-> **Current status:** [`sfm.py`](sfm.py) defines the full pipeline orchestration in `run()`, but individual stages are **stubs** awaiting implementation. A working [**keypoint matching demo**](demos/demo_keypoints.py) is included for the first pipeline stage.
-
-<br>
-
-<div align="center">
-
-```
-  📷 Images  →  🔍 Features  →  🔗 Match  →  📐 Pose  →  ☁️ Point Cloud
-```
-
-*Inspired by modern view-synthesis project pages — built for teaching, not production NeRF rendering.*
-
-</div>
-
-<br>
-
----
-
-## Pipeline
-
-<div align="center">
-
-| Stage | Method | Status |
-|:---:|:---|:---:|
-| 1 | Keypoint detect & describe (SIFT / ORB / AKAZE) | ✅ Demo |
-| 2 | Cross-image descriptor matching | ✅ Demo |
-| 3 | Robust estimation (RANSAC) | ✅ Demo |
-| 4 | Two-view initialization | 🔧 Stub |
-| 5 | Incremental PnP + triangulation | 🔧 Stub |
-| 6 | Bundle adjustment | 🔧 Stub |
-| 7 | Loop closure & global BA | 🔧 Stub |
-
-</div>
-
-<br>
-
-```mermaid
-flowchart LR
-  subgraph input [Input]
-    IMG[Overlapping images]
-  end
-  subgraph front [Frontend]
-    DET[Detect & Describe]
-    MAT[Match + RANSAC]
-  end
-  subgraph back [Backend]
-    INIT[Two-view init]
-    INC[Incremental register]
-    TRI[Triangulate]
-    BA[Bundle adjustment]
-  end
-  subgraph out [Output]
-    PC[3D point cloud]
-    POSE[Camera poses]
-  end
-  IMG --> DET --> MAT --> INIT --> INC --> TRI --> BA --> PC
-  BA --> POSE
-```
-
-<br>
-
----
-
-## Quick Start
+**Typical workflow for a new developer:**
 
 ```bash
 git clone https://github.com/rbdlabhaifa/SFM-SLAM.git
 cd SFM-SLAM
-
 python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
-
-cp config.yaml.example config.yaml
-# Edit images_dir → folder with ≥2 overlapping JPG/PNG images
-
+cp config.yaml.example config.yaml   # set images_dir
 python demos/demo_keypoints.py
-# → output/matches_*.jpg
 ```
 
-### Run the scaffold (after implementing stubs)
-
-```python
-from pathlib import Path
-import cv2
-from sfm import StructureFromMotion
-
-paths = sorted(Path("your-images").glob("*.jpg"))
-images = [cv2.imread(str(p)) for p in paths]
-
-sfm = StructureFromMotion(images, feature_detector="SIFT")
-camera_poses, point_cloud = sfm.run()
-```
-
-<br>
+Implement methods in `sfm.py` one at a time, then call `sfm.run()` when ready.
 
 ---
 
-## Demos
+# 1. Project Overview
 
-| Demo | Command | Output |
+**Problem solved:** Learn and experiment with classical SfM without wrapping a full third-party reconstruction engine on day one.
+
+**Current status:** Every method in `StructureFromMotion` except the orchestration in `run()` is a **`pass` stub**. Calling `run()` as-is will fail. Use the keypoint demo to validate your environment, then fill in stubs starting with `detect_and_describe_keypoints`.
+
+**Primary users:**
+
+| Audience | How they use it |
+|---|---|
+| **Students** | Implement SfM stages as a lab assignment |
+| **Researchers** | Swap feature detectors, matchers, or BA backends |
+
+**What it is not:** a finished reconstruction tool, dense mapper, or drop-in COLMAP replacement.
+
+**Related RBD Lab repos:** [simulatorMapping](https://github.com/rbdlabhaifa/simulatorMapping), [LidarDrone](https://github.com/rbdlabhaifa/LidarDrone), [RBD-SLAM](https://github.com/rbdlabhaifa/RBD-SLAM).
+
+---
+
+# 2. Architecture & Tech Stack
+
+| Layer | Technology |
+|---|---|
+| Language | Python 3.10+ |
+| Vision | OpenCV 4 (`opencv-python`, `opencv-contrib-python`) |
+| Numerics | NumPy |
+| Config | YAML (`config.yaml`) |
+| Pattern | Single-class pipeline |
+
+**Repository layout:** one library module ([`sfm.py`](sfm.py)) + scripts under [`demos/`](demos/). No CMake, no submodules, no build step.
+
+**Pipeline stages (defined in `sfm.py`):**
+
+| Step | Method | Status |
 |---|---|---|
-| **Keypoint matching** | `python demos/demo_keypoints.py` | Match visualization JPGs in `output/` |
-| **Full SfM pipeline** | Implement stubs in `sfm.py`, then `sfm.run()` | Poses + sparse cloud (planned) |
+| 1 | `detect_and_describe_keypoints` | Stub (demo covers this in `demos/`) |
+| 2 | `match_keypoints` | Stub |
+| 3 | `robustly_estimate_matches` | Stub |
+| 4 | `initialize_structure` | Stub |
+| 5 | `estimate_camera_pose` / `triangulate_new_points` / `update_existing_points` | Stub |
+| 6 | `bundle_adjustment` | Stub |
+| 7 | `detect_loop_closure` / `global_optimization` | Stub |
 
-Full walkthrough: **[demos/README.md](demos/README.md)**
-
-<br>
+```mermaid
+flowchart LR
+  IMG[Images] --> DET[Detect & describe]
+  DET --> MAT[Match + RANSAC]
+  MAT --> INIT[Two-view init]
+  INIT --> INC[Incremental PnP]
+  INC --> TRI[Triangulate]
+  TRI --> BA[Bundle adjustment]
+  BA --> OUT[Point cloud + poses]
+```
 
 ---
+
+# 3. Prerequisites
+
+- **Python** 3.10 or newer
+- **pip** and a virtual environment (recommended)
+- **opencv-contrib-python** (needed for SIFT in OpenCV 4.x)
+- **≥ 2 overlapping images** (JPG/PNG) for the demo
+
+No GPU, Docker, or system packages beyond what `pip install -r requirements.txt` provides.
+
+---
+
+# 4. Environment Setup
+
+## Clone
+
+```bash
+git clone https://github.com/rbdlabhaifa/SFM-SLAM.git
+cd SFM-SLAM
+```
+
+## Install dependencies
+
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+```
 
 ## Configuration
 
-No `.env` file. Copy the template:
+No `.env` file. Copy the template and edit paths:
 
 ```bash
 cp config.yaml.example config.yaml
@@ -152,210 +127,165 @@ cp config.yaml.example config.yaml
 
 | Key | Description |
 |---|---|
-| `images_dir` | Absolute path to input image folder |
+| `images_dir` | Absolute path to folder of input images |
 | `feature_detector` | `SIFT`, `ORB`, or `AKAZE` |
-| `match_ratio` | Lowe ratio test threshold (default `0.75`) |
-| `ransac_threshold` | RANSAC pixel threshold |
-| `output_dir` | Writable output directory |
-| `max_images` | Cap images processed (`0` = all) |
-| `save_match_plots` | Write match visualizations |
+| `match_ratio` | Lowe ratio test (default `0.75`) |
+| `ransac_threshold` | RANSAC reprojection threshold in pixels |
+| `output_dir` | Writable directory for match visualizations |
+| `max_images` | Limit images processed (`0` = all) |
+| `save_match_plots` | Write `matches_*.jpg` files |
 
 > `config.yaml` is gitignored. The `.example` file is the committed template.
 
-<br>
+No API keys or cloud credentials are required.
 
 ---
 
-# Handover Documentation
+# 5. Build & Run Instructions
 
-<details open>
-<summary><strong>1. Project Overview</strong></summary>
+There is **no compile step**.
 
-<br>
-
-**SFM-SLAM** is a **Python educational scaffold** for classical Structure from Motion — the geometric counterpart to learning-based view synthesis (e.g. [NeRF](https://www.matthewtancik.com/nerf)). It turns unordered or sequential photographs into a sparse 3D model plus camera extrinsics, suitable as a stepping stone toward COLMAP, ORB-SLAM, or neural rendering pipelines used elsewhere in the RBD Lab ecosystem ([simulatorMapping](https://github.com/rbdlabhaifa/simulatorMapping), [RBD-SLAM](https://github.com/rbdlabhaifa/RBD-SLAM)).
-
-**Users:** CS / robotics students implementing SfM from scratch; researchers prototyping custom feature matchers or BA backends.
-
-**Not included:** dense reconstruction, NeRF training, GPU acceleration, or production-grade COLMAP parity.
-
-</details>
-
-<details>
-<summary><strong>2. Architecture & Tech Stack</strong></summary>
-
-<br>
-
-| Layer | Technology |
-|---|---|
-| Language | Python 3.10+ |
-| Vision | OpenCV (`opencv-python`, `opencv-contrib-python`) |
-| Numerics | NumPy |
-| Config | YAML (`config.yaml`) |
-| Pattern | Single-class pipeline (`StructureFromMotion`) |
-
-**Layout:** one library file ([`sfm.py`](sfm.py)) + demo scripts under [`demos/`](demos/). No build step, no CMake, no submodules.
-
-</details>
-
-<details>
-<summary><strong>3. Prerequisites</strong></summary>
-
-<br>
-
-- Python 3.10 or newer
-- pip / venv
-- **opencv-contrib** (required for SIFT on OpenCV 4.x)
-- A folder of ≥2 overlapping images for demos
-
-</details>
-
-<details>
-<summary><strong>4. Environment Setup</strong></summary>
-
-<br>
+## Runnable demo (keypoint matching)
 
 ```bash
-python3 -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-cp config.yaml.example config.yaml
-```
-
-Set `images_dir` and `output_dir` to absolute paths on your machine. No API keys or cloud secrets.
-
-</details>
-
-<details>
-<summary><strong>5. Build & Run</strong></summary>
-
-<br>
-
-**No compile step.**
-
-```bash
-# Runnable today
 python demos/demo_keypoints.py
-
-# After implementing sfm.py stubs
-python -c "from sfm import StructureFromMotion; ..."
 ```
 
-**Tests / linters:** none configured. Validate visually via `output/matches_*.jpg`.
+Writes side-by-side match images to `output/` (or your configured `output_dir`).
 
-</details>
+## Pipeline scaffold (after implementing stubs)
 
-<details>
-<summary><strong>6. Repository Structure</strong></summary>
+```python
+from pathlib import Path
+import cv2
+from sfm import StructureFromMotion
 
-<br>
+paths = sorted(Path("/path/to/images").glob("*.jpg"))
+images = [cv2.imread(str(p)) for p in paths]
+
+sfm = StructureFromMotion(images, feature_detector="SIFT")
+camera_poses, point_cloud = sfm.run()
+```
+
+## Tests and linters
+
+None configured. Verify the demo by inspecting `output/matches_*.jpg`.
+
+See also: **[demos/README.md](demos/README.md)**
+
+---
+
+# 6. Repository Structure
 
 ```
 SFM-SLAM/
-├── sfm.py                 # ★ StructureFromMotion class (pipeline scaffold)
-├── config.yaml.example    # ★ Config template
+├── sfm.py                   # StructureFromMotion class (pipeline scaffold)
+├── config.yaml.example      # Config template — copy to config.yaml
 ├── requirements.txt
 ├── demos/
-│   ├── demo_keypoints.py  # ★ Runnable stage-1 demo
+│   ├── demo_keypoints.py    # Runnable feature matching demo
 │   └── README.md
 └── README.md
 ```
 
-</details>
+---
 
-<details>
-<summary><strong>7. Core Workflows & Data Flow</strong></summary>
+# 7. Core Workflows & Data Flow
 
-<br>
-
-**Implemented today (demo):**
+## Workflow A — Keypoint demo (works today)
 
 ```
-config.yaml → demo_keypoints.py
-  → load images → detect (SIFT/ORB/AKAZE)
-  → match → RANSAC filter → save match JPGs
+config.yaml
+     │
+     ▼
+demos/demo_keypoints.py
+     ├─ load consecutive image pairs from images_dir
+     ├─ detect & describe (SIFT / ORB / AKAZE)
+     ├─ match + Lowe ratio test
+     ├─ RANSAC (fundamental matrix)
+     └─ save matches_*.jpg → output_dir
 ```
 
-**Planned (`sfm.run()`):**
+**Read first:** [`demos/demo_keypoints.py`](demos/demo_keypoints.py)
+
+## Workflow B — Full SfM (to implement)
 
 ```
-images[] → detect_and_describe_keypoints()
-        → match_keypoints()
-        → robustly_estimate_matches()
-        → initialize_structure()          # two-view
-        → for each remaining image:
-              estimate_camera_pose()      # PnP
-              triangulate_new_points()
-              update_existing_points()
-              bundle_adjustment()
-        → detect_loop_closure()
-        → global_optimization()
-        → (camera_poses, point_cloud)
+images[] → StructureFromMotion.run()
+     ├─ detect_and_describe_keypoints()
+     ├─ match_keypoints()
+     ├─ robustly_estimate_matches()
+     ├─ initialize_structure()
+     ├─ for each new image: PnP, triangulate, update, local BA
+     └─ loop closure + global optimization
+     → (camera_poses, point_cloud)
 ```
 
-**Start reading:** [`sfm.py`](sfm.py) method docstrings → [`demos/demo_keypoints.py`](demos/demo_keypoints.py).
-
-</details>
-
-<details>
-<summary><strong>8. Deployment & CI/CD</strong></summary>
-
-<br>
-
-Local Python only. No Docker, cloud, or CI pipelines. Run on any machine with OpenCV installed.
-
-</details>
-
-<details>
-<summary><strong>9. Known Quirks & Technical Debt</strong></summary>
-
-<br>
-
-| Issue | Impact |
-|---|---|
-| **All `sfm.py` methods are `pass` stubs** | `run()` crashes if called unchanged |
-| **`final_camera_poses.keys()[0]` in `run()`** | Python 3 incompatible syntax — fix when implementing |
-| **No bundle adjustment backend** | Need scipy / ceres / g2o binding |
-| **No sample images in repo** | Bring your own dataset |
-| **SIFT patent note** | Use ORB/AKAZE if contrib build unavailable |
-
-</details>
-
-<details>
-<summary><strong>10. Troubleshooting</strong></summary>
-
-<br>
-
-**`ModuleNotFoundError: cv2`** → `pip install opencv-python opencv-contrib-python`
-
-**`Missing config.yaml`** → `cp config.yaml.example config.yaml`
-
-**`Need at least 2 images`** → add overlapping photos to `images_dir`
-
-**SIFT not available** → install `opencv-contrib-python` or set `feature_detector: ORB`
-
-**Empty match plots** → increase overlap between consecutive frames; lower `match_ratio`
-
-</details>
-
-<br>
+**Read first:** [`sfm.py`](sfm.py) — each method has an input/output docstring describing the intended contract.
 
 ---
 
-<div align="center">
+# 8. Deployment & CI/CD
 
-### Related RBD Lab Projects
+**Deployment:** run locally on any machine with Python and OpenCV. No server, container, or cloud setup.
 
-[simulatorMapping](https://github.com/rbdlabhaifa/simulatorMapping) ·
-[LidarDrone](https://github.com/rbdlabhaifa/LidarDrone) ·
-[RBD-SLAM](https://github.com/rbdlabhaifa/RBD-SLAM)
+**CI/CD:** none configured.
 
-<br>
+---
 
-<sub>Structure from Motion · Sparse geometry · View synthesis foundations</sub>
+# 9. Known Quirks & Technical Debt
 
-<br>
+| Issue | Why | Impact |
+|---|---|---|
+| All stage methods are `pass` stubs | Starter code for students | `run()` fails until implemented |
+| `final_camera_poses.keys()[0]` in `run()` | Written for Python 2 style | Invalid in Python 3 — fix when implementing |
+| No sample images in repo | Size / licensing | You must supply your own dataset |
+| No bundle adjustment library wired | Not in scope of scaffold | Need scipy, ceres, or similar when implementing BA |
+| `opencv-contrib` required for SIFT | OpenCV 4 packaging | Use ORB/AKAZE if contrib unavailable |
 
-**[↑ Back to top](#sfm-slam)**
+---
 
-</div>
+# 10. Troubleshooting / FAQ
+
+### 1. `ModuleNotFoundError: No module named 'cv2'`
+
+```bash
+pip install opencv-python opencv-contrib-python
+```
+
+### 2. `FileNotFoundError: Missing config.yaml`
+
+```bash
+cp config.yaml.example config.yaml
+```
+
+Edit `images_dir` and `output_dir` to valid absolute paths.
+
+### 3. `Need at least 2 images in ...`
+
+Add at least two photos with substantial overlap to `images_dir`. Sequential frames from a slow pan around an object work well.
+
+### 4. SIFT not available
+
+Install `opencv-contrib-python`, or set `feature_detector: ORB` in `config.yaml`.
+
+### 5. Empty or sparse match visualizations
+
+- Increase overlap between consecutive images
+- Lower `match_ratio` slightly (e.g. `0.7`)
+- Try a different detector (`ORB` vs `SIFT`)
+
+---
+
+## SfM pipeline reference
+
+The intended stages (from the original project design):
+
+1. Detect and describe keypoints in each image.
+2. Match keypoints across image pairs.
+3. Filter matches with RANSAC or similar.
+4. Initialize 3D structure and poses from a strong image pair.
+5. Incrementally add images: estimate pose (PnP), triangulate new points, update existing points, run local bundle adjustment.
+6. Optionally detect loop closures and run global optimization.
+
+Customize by editing methods in `StructureFromMotion` — swap detectors, matchers, or add new optimization steps.
